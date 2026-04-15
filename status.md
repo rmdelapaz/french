@@ -22,7 +22,7 @@
 - [x] 12. french_technology_communication.html — Tech vocab, SMS abbreviations, social media, phone, portable ambiguity
 - [x] 13. french_weather_seasons.html — Weather expressions, temperature, seasons, Canadian winter vocab, tuque
 - [x] 14. french_emotions_relationships.html — Emotions (être/avoir), relationships, love, breakups, friendship, life events, chum/blonde
-- [ ] 15. french_travel_culture_france.html
+- [x] 15. french_travel_culture_france.html — Airport, hotels, TGV, regions, dining etiquette, social rules, sightseeing, survival phrases
 - [ ] 16. french_travel_culture_canada.html
 
 ## Design Pattern Notes
