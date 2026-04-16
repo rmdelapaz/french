@@ -4,8 +4,8 @@
 - [x] styles/main.css (with France/Canada callout card styles + dialect-compare grid)
 - [x] site-nav.js (16-lesson nav, dark mode, quiz logic, footer)
 - [x] index.html (course homepage with 16-lesson grid)
-- [ ] favicon.png (needs creation)
-- [ ] favicon.ico (needs creation)
+- [x] favicon.png
+- [x] favicon.ico
 
 ## Lessons (16 total)
 - [x] 1. french_alphabet_pronunciation.html — Alphabet, accents, vowels, nasals, consonants, liaison
@@ -23,7 +23,7 @@
 - [x] 13. french_weather_seasons.html — Weather expressions, temperature, seasons, Canadian winter vocab, tuque
 - [x] 14. french_emotions_relationships.html — Emotions (être/avoir), relationships, love, breakups, friendship, life events, chum/blonde
 - [x] 15. french_travel_culture_france.html — Airport, hotels, TGV, regions, dining etiquette, social rules, sightseeing, survival phrases
-- [ ] 16. french_travel_culture_canada.html
+- [x] 16. french_travel_culture_canada.html — Francophone regions, Montréal/Québec City, Québécois food, festivals, expressions, Loi 101, identity, seasonal tips
 
 ## Design Pattern Notes
 - Each lesson: h1 title → card-info objectives → topic sections with tables → dialect-compare boxes → exercises → quiz → card-accent summary
@@ -32,5 +32,5 @@
 - Follows Korean/Russian site structure (site-nav.js injects header, nav, footer)
 
 ## Deployment
-- Site hosted on Netlify at rays-home.netlify.app (subdirectory)
+- Site hosted on Netlify at rays-french.netlify.app
 - All files are static HTML — no build step needed
