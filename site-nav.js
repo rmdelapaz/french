@@ -1,26 +1,7 @@
-/* site-nav.js — Injects site header, dark mode toggle, and prev/next nav */
+/* site-nav.js — Injects site header, dark mode toggle, content-wrap, and quiz interactivity.
+   Prev/Next nav and site footer live as static HTML in each lesson (managed by add_footer_nav.py). */
 (function () {
   'use strict';
-
-  /* ---- Lesson order ---- */
-  const lessons = [
-    { file: 'french_alphabet_pronunciation.html',       title: 'Alphabet & Pronunciation' },
-    { file: 'french_france_vs_canada.html',              title: 'France vs Canadian French' },
-    { file: 'french_greetings_essentials.html',          title: 'Greetings & Essentials' },
-    { file: 'french_numbers_time_dates.html',            title: 'Numbers, Time & Dates' },
-    { file: 'french_family_descriptions.html',           title: 'Family & Descriptions' },
-    { file: 'french_food_dining.html',                   title: 'Food & Dining' },
-    { file: 'french_shopping_money.html',                title: 'Shopping & Money' },
-    { file: 'french_directions_transportation.html',     title: 'Directions & Transport' },
-    { file: 'french_health_body.html',                   title: 'Health & Body' },
-    { file: 'french_hobbies_daily_life.html',            title: 'Hobbies & Daily Life' },
-    { file: 'french_work_education.html',                title: 'Work & Education' },
-    { file: 'french_technology_communication.html',      title: 'Technology & Communication' },
-    { file: 'french_weather_seasons.html',               title: 'Weather & Seasons' },
-    { file: 'french_emotions_relationships.html',        title: 'Emotions & Relationships' },
-    { file: 'french_travel_culture_france.html',         title: 'Travel & Culture: France' },
-    { file: 'french_travel_culture_canada.html',         title: 'Travel & Culture: Québec' },
-  ];
 
   /* ---- Dark mode ---- */
   const saved = localStorage.getItem('theme');
@@ -76,35 +57,8 @@
     document.body.appendChild(wrap);
   }
 
-  /* ---- Prev / Next nav (lesson pages only) ---- */
-  if (!isIndex) {
-    const currentFile = location.pathname.split('/').pop();
-    const idx = lessons.findIndex(l => l.file === currentFile);
-
-    if (idx !== -1) {
-      const nav = document.createElement('nav');
-      nav.className = 'lesson-nav';
-
-      if (idx > 0) {
-        const prev = lessons[idx - 1];
-        nav.innerHTML += `<a href="${prev.file}">← ${prev.title}</a>`;
-      } else {
-        nav.innerHTML += '<span class="spacer"></span>';
-      }
-
-      nav.innerHTML += `<a href="/index.html" style="background:var(--card-bg);color:var(--primary-color);border:1px solid var(--border-color);">All Lessons</a>`;
-
-      if (idx < lessons.length - 1) {
-        const next = lessons[idx + 1];
-        nav.innerHTML += `<a href="${next.file}">${next.title} →</a>`;
-      } else {
-        nav.innerHTML += '<span class="spacer"></span>';
-      }
-
-      const wrap = document.querySelector('.content-wrap') || document.body;
-      wrap.appendChild(nav);
-    }
-  }
+  /* ---- Prev/Next nav and site footer are now static in each lesson's HTML
+         (managed by add_footer_nav.py). Do not inject them here. ---- */
 
   /* ---- Quiz interactivity ---- */
   document.querySelectorAll('.quiz-question').forEach(q => {
@@ -123,13 +77,4 @@
       });
     });
   });
-
-  /* ---- Site footer ---- */
-  const footer = document.createElement('footer');
-  footer.className = 'site-footer';
-  footer.innerHTML = `
-    <p>© ${new Date().getFullYear()} <a href="https://rays-home.netlify.app/" target="_blank" rel="noopener">Ray's House of Fun</a> · 
-    <a href="https://rays-home.netlify.app/contact" target="_blank" rel="noopener">Contact</a></p>
-  `;
-  document.body.appendChild(footer);
 })();

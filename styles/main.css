@@ -365,6 +365,21 @@ svg { display: block; margin: 1rem auto; max-width: 100%; }
 .lesson-nav a:hover { background: var(--accent2); transform: translateY(-1px); }
 .lesson-nav .spacer { flex: 1; }
 
+/* Home-link: outlined "ghost" variant to distinguish from prev/next */
+.lesson-nav .home-link {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+.lesson-nav .home-link:hover {
+    background: var(--primary-color);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* First lesson uses <span></span> as a prev placeholder — keep it inert */
+.lesson-nav > span:empty { flex: 0 0 auto; }
+
 /* ===========================
    Footer
    =========================== */
@@ -377,6 +392,17 @@ svg { display: block; margin: 1rem auto; max-width: 100%; }
     margin-top: 2rem;
 }
 .site-footer a { color: var(--primary-color); }
+.site-footer p { margin: .35rem 0; }
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: .5rem;
+}
+.site-footer .footer-links a { text-decoration: none; }
+.site-footer .footer-links a:hover { text-decoration: underline; }
 
 /* ===========================
    INDEX PAGE — hero, card grid, progress
