@@ -568,3 +568,45 @@ details[open] > summary { margin-bottom: .5rem; }
 @media (prefers-reduced-motion: reduce) {
     * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+/* ===========================
+   Audio buttons
+   Injected by audio.js next to target-language text. When no matching
+   voice is installed the whole layer is hidden rather than left to
+   mispronounce the text with an English voice.
+   =========================== */
+.audio-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.55rem;
+    height: 1.55rem;
+    margin-left: .4rem;
+    padding: 0;
+    vertical-align: middle;
+    background: transparent;
+    color: var(--text-light);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    font-size: .7rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+}
+.audio-btn:hover  { color: var(--primary-color); border-color: var(--primary-color); background: var(--primary-light); }
+.audio-btn:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+.audio-btn.speaking { color: #fff; background: var(--primary-color); border-color: var(--primary-color); }
+
+html.no-tts-voice .audio-btn { display: none; }
+
+.audio-notice {
+    display: none;
+    font-size: .85rem;
+    color: var(--text-light);
+    background: var(--warning-bg);
+    border-left: 4px solid var(--warning-border);
+    border-radius: var(--radius-sm);
+    padding: .6rem .9rem;
+    margin: 1rem 0;
+}
+html.no-tts-voice .audio-notice { display: block; }
