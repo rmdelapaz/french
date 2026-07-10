@@ -14,8 +14,21 @@
     'use strict';
 
     var CONFIG = {
-        lang: 'fr',
+        /* Voice language prefixes, tried in order. A course may accept a related
+           language as a fallback when no native voice exists. */
+        langs: ['fr'],
+        /* Which of those are the real thing. Anything else triggers the fallback
+           transliteration and an on-page notice. */
+        nativeLangs: ['fr'],
+        /* Rewrites applied to the utterance (never the page) when speaking through a
+           fallback voice, so its orthography produces the right sounds. */
+        fallbackRules: null,
+        /* Lowercase before speaking: engines spell out ALL-CAPS words letter by letter. */
+        lowercase: false,
+        /* Re-attach when the DOM changes, for content built by page scripts. */
+        rescan: false,
         langName: 'French',
+        fallbackName: '',
         addLanguageAs: 'Français',
         mode: 'header',
         /* `detect` decides whether a cell holds target text; `pattern` decides what
@@ -26,8 +39,18 @@
         strip: null,
         /* 'header': a table column is target text when its <th> matches this. */
         header: '(français|french|québécois|liaison|france|canada)|^expressions?$|^(masculine|feminine|plural|singular)\\b',
-        /* 'rules': explicit selectors, for courses whose table shapes disagree. */
+        /* ...unless some <th> in the same row matches this, in which case the whole
+           table is comparative commentary rather than phrases, and is skipped. */
+        headerSkip: '^feature$',
+        /* 'rules': explicit selectors, for courses whose containers disagree. */
         rules: null,
+        /* Does this string look like the target language? Used where a container
+           holds both target text and English. */
+        targetTest: null,
+        /* Strings that must never be spoken (pronunciation respellings). */
+        excludeTest: null,
+        /* Removed from the utterance but left visible on the page (annotations). */
+        stripSpoken: '\\s*\\([^)]*[\\u{1F1E6}-\\u{1F1FF}][^)]*\\)|\\s*\\((?:informal|formal|slang|familier|argot|dated|old)\\)',
         rate: 0.85
     };
 
@@ -38,23 +61,73 @@
     var RUN = CONFIG.pattern ? new RegExp(CONFIG.pattern + '+', 'g') : null;
     var STRIP = CONFIG.strip ? new RegExp(CONFIG.strip, 'g') : null;
     var HEADER = CONFIG.header ? new RegExp(CONFIG.header, 'i') : null;
+    var HEADER_SKIP = CONFIG.headerSkip ? new RegExp(CONFIG.headerSkip, 'i') : null;
+    var STRIP_SPOKEN = CONFIG.stripSpoken ? new RegExp(CONFIG.stripSpoken, 'gu') : null;
+    var TARGET_TEST = CONFIG.targetTest ? new RegExp(CONFIG.targetTest, 'i') : null;
+    var EXCLUDE_TEST = CONFIG.excludeTest ? new RegExp(CONFIG.excludeTest) : null;
     /* A cell with no letters (an em-dash, a number, an empty spacer) is not speakable. */
     var SPEAKABLE = /[A-Za-zÀ-ɏ]/;
+    /* " - ", " – ", " — ": the gloss separator. Requires surrounding spaces so a
+       hyphenated word (bien-estar) and a respelling (kee-see-EH-rah) survive intact. */
+    var DASH = /\s+[-–—]\s+/;
+    var QUOTED = /[“"]([^”"]{2,}?)[”"]/g;
+
+    /* Source HTML wraps long passages across lines and sometimes in quote marks.
+       Collapse the whitespace and drop the enclosing quotes so the utterance — and
+       the aria-label built from it — is the sentence itself. */
+    function clean(text) {
+        return text.replace(/\s+/g, ' ').trim().replace(/^[“"]+|[”"]+$/g, '').trim();
+    }
+
+    function looksTarget(text) {
+        return !TARGET_TEST || TARGET_TEST.test(text);
+    }
+
+    function isExcluded(text) {
+        return !!EXCLUDE_TEST && EXCLUDE_TEST.test(text);
+    }
+
+    function usable(text) {
+        return !!text && SPEAKABLE.test(text) && !isExcluded(text);
+    }
 
     var voice = null;
     var activeBtn = null;
 
+    function langOf(v) { return v.lang.replace('_', '-').toLowerCase(); }
+
     function findVoice() {
         var voices = synth.getVoices();
         if (!voices.length) return null;
-        /* Voice.lang is 'ru-RU' on most platforms but 'ru_RU' on some Android builds. */
-        var matches = voices.filter(function (v) {
-            return v.lang.replace('_', '-').toLowerCase().indexOf(CONFIG.lang) === 0;
+        /* Try each accepted language in order, so a native voice always wins over a
+           fallback. Voice.lang is 'ru-RU' on most platforms but 'ru_RU' on some
+           Android builds. */
+        for (var i = 0; i < CONFIG.langs.length; i++) {
+            var prefix = CONFIG.langs[i];
+            var matches = voices.filter(function (v) { return langOf(v).indexOf(prefix) === 0; });
+            if (!matches.length) continue;
+            /* Prefer a local voice: no network round-trip, works offline. */
+            var local = matches.filter(function (v) { return v.localService; });
+            return (local[0] || matches[0]);
+        }
+        return null;
+    }
+
+    function isFallbackVoice(v) {
+        if (!v) return false;
+        var l = langOf(v);
+        return !CONFIG.nativeLangs.some(function (p) { return l.indexOf(p) === 0; });
+    }
+
+    /* Rewrite the utterance for a fallback voice. The page keeps its own spelling; only
+       what is handed to the speech engine changes. */
+    function forFallback(text) {
+        if (!CONFIG.fallbackRules || !isFallbackVoice(voice)) return text;
+        var out = text;
+        CONFIG.fallbackRules.forEach(function (r) {
+            out = out.replace(new RegExp(r[0], r[1]), r[2]);
         });
-        if (!matches.length) return null;
-        /* Prefer a local voice: no network round-trip, works offline. */
-        var local = matches.filter(function (v) { return v.localService; });
-        return (local[0] || matches[0]);
+        return out;
     }
 
     /* Keep only target-script runs, so '기역 (giyeok)' speaks as '기역' and a
@@ -71,7 +144,7 @@
     function speak(text) {
         if (!voice || !text) return null;
         synth.cancel();
-        var u = new SpeechSynthesisUtterance(text);
+        var u = new SpeechSynthesisUtterance(forFallback(text));
         u.voice = voice;
         u.lang = voice.lang;
         u.rate = CONFIG.rate;
@@ -99,12 +172,22 @@
     }
 
     function makeButton(text) {
+        /* Centralised so every attach path drops annotations from the utterance
+           while the cell keeps showing them. */
+        var label = text;
+        if (STRIP_SPOKEN) {
+            STRIP_SPOKEN.lastIndex = 0;
+            text = text.replace(STRIP_SPOKEN, '').trim();
+            label = text;
+        }
+        if (CONFIG.lowercase) text = text.toLowerCase();
+
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'audio-btn';
         btn.dataset.speak = text;
         btn.textContent = '🔊';
-        btn.setAttribute('aria-label', 'Listen to ' + text);
+        btn.setAttribute('aria-label', 'Listen to ' + label);
         btn.title = 'Listen';
         return btn;
     }
@@ -121,11 +204,14 @@
         });
     }
 
+    /* Block containers take the button as a trailing child. An inline <strong> takes
+       it as a following sibling, so the button sits beside the word rather than
+       after the whole line. */
+    var BLOCK = { TD: 1, TH: 1, LI: 1, P: 1, DIV: 1 };
+
     function place(el, text) {
         var btn = makeButton(OVERRIDES[text] || text);
-        /* Inside a cell the button trails the text; after an inline <strong> it must
-           sit beside the word, not swallow the rest of the cell. */
-        if (el.tagName === 'TD') el.appendChild(btn);
+        if (BLOCK[el.tagName]) el.appendChild(btn);
         else el.insertAdjacentElement('afterend', btn);
     }
 
@@ -142,6 +228,13 @@
                 if (rows[i].querySelector('th')) { head = rows[i]; break; }
             }
             if (!head) return;
+
+            if (HEADER_SKIP) {
+                var skip = Array.prototype.some.call(head.cells, function (cell) {
+                    return cell.tagName === 'TH' && HEADER_SKIP.test(cell.textContent.trim());
+                });
+                if (skip) return;
+            }
 
             var cols = [];
             Array.prototype.forEach.call(head.cells, function (cell, idx) {
@@ -163,14 +256,134 @@
         });
     }
 
+    /* Text of `el` ignoring an existing button, and ignoring everything up to and
+       including the first <strong> label. <p><strong>You:</strong> Muy bien</p> */
+    function textAfterStrong(el) {
+        var label = el.querySelector('strong');
+        if (!label) return ownText(el);
+        var out = '';
+        for (var n = label.nextSibling; n; n = n.nextSibling) {
+            if (n.nodeType === 1 && n.classList.contains('audio-btn')) continue;
+            out += n.textContent;
+        }
+        return clean(out);
+    }
+
+    function ownText(el) {
+        var clone = el.cloneNode(true);
+        Array.prototype.forEach.call(clone.querySelectorAll('.audio-btn'), function (b) {
+            b.remove();
+        });
+        return clean(clone.textContent);
+    }
+
+    /* <li>Tengo... - I have...</li> -> "Tengo..." */
+    function textBeforeDash(el) {
+        return clean(ownText(el).split(DASH)[0]);
+    }
+
+    /* "Kumusta ka? (How are you?)" -> "Kumusta ka?" — target sentence, English gloss
+       in a trailing parenthetical. */
+    function textBeforeParen(el) {
+        return clean(ownText(el).split(/\s*\(/)[0]);
+    }
+
+    /* A real word split into syllables for drilling: es-tu-dian-te -> estudiante.
+       Three or more all-lowercase parts. A two-part lowercase token could be a
+       genuine hyphenated word, so it is left alone. */
+    var SYLLABIFIED = /^[a-zñáéíóúü]+(-[a-zñáéíóúü]+){2,}$/;
+
+    function deSyllabify(text) {
+        return SYLLABIFIED.test(text) ? text.replace(/-/g, '') : text;
+    }
+
+    /* Pronunciation-drill list items:
+           mesa (MEH-sah) - table       -> "mesa"        (parens = respelling)
+           es-tu-dian-te (student)      -> "estudiante"  (parens = English gloss)
+       Both shapes put the Spanish first; the parenthetical is never trustworthy.
+       A multi-word prefix means English prose rather than a drill item
+       ("The pure vowels in "tacos" (TAH-kohs)"), so fall back to the parenthetical
+       only there, and demand it look like the target language. */
+    function vocabWord(el) {
+        var m = ownText(el).match(/^\s*([^()]+?)\s*\(([^)]+)\)\s*(.?)/);
+        if (!m) return '';
+        var before = m[1].trim(), inside = m[2].trim(), next = m[3];
+
+        /* Not a drill item but a study-plan label: "Morning (15 min): AI warm-up".
+           A duration in the parens, or a colon right after it, gives it away — and
+           without this the layer happily says "Morning" in a Spanish voice. */
+        if (/\d/.test(inside) || next === ':') return '';
+
+        var oneWord = function (s) { return s && !/\s/.test(s); };
+        if (oneWord(before)) return isExcluded(before) ? '' : deSyllabify(before);
+        if (oneWord(inside) && !isExcluded(inside) && looksTarget(inside)) return inside;
+        return '';
+    }
+
+    /* Spanish quoted inside English commentary. Each quote gets its own button,
+       inserted immediately after the closing quote mark. Matches are applied back
+       to front so earlier offsets stay valid after splitText(). */
+    function attachQuotes(el) {
+        var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+        var nodes = [], n;
+        while ((n = walker.nextNode())) nodes.push(n);
+
+        nodes.forEach(function (node) {
+            if (node.parentElement.closest('.audio-btn')) return;
+            var hits = [], m;
+            QUOTED.lastIndex = 0;
+            while ((m = QUOTED.exec(node.nodeValue))) hits.push(m);
+
+            for (var i = hits.length - 1; i >= 0; i--) {
+                var inner = hits[i][1].trim();
+                if (!usable(inner) || !looksTarget(inner)) continue;
+                var end = hits[i].index + hits[i][0].length;
+                var tail = node.splitText(end);
+                node.parentNode.insertBefore(makeButton(inner), tail);
+            }
+        });
+    }
+
+    /* A syllabified headword: "BA-HAY (house)", "ma-GA-nda (beautiful)". In this course
+       the respelling IS the word, just hyphenated and shouted, so de-hyphenating
+       recovers it. Anything without that shape (an English bullet) yields nothing. */
+    function syllabifiedWord(el) {
+        var head = ownText(el).split(/[\s(]/)[0];
+        if (!/^[A-Za-z]+(-[A-Za-z]+)+$/.test(head)) return '';
+        if (!/[A-Z]/.test(head)) return '';
+        return head.replace(/-/g, '');
+    }
+
+    var PICK = {
+        self: ownText,
+        afterStrong: textAfterStrong,
+        beforeDash: textBeforeDash,
+        beforeParen: textBeforeParen,
+        vocabWord: vocabWord,
+        syllabifiedWord: syllabifiedWord
+    };
+
     function attachByRules() {
         CONFIG.rules.forEach(function (rule) {
             Array.prototype.forEach.call(document.querySelectorAll(rule.selector), function (el) {
                 if (el.closest('.no-audio')) return;
+                if (el.dataset.audioDone) return;
+
+                if (rule.pick === 'quotes') {
+                    el.dataset.audioDone = '1';
+                    attachQuotes(el);
+                    return;
+                }
+
                 var host = el.tagName === 'TD' ? el : el.parentElement;
-                if (!host || host.querySelector('.audio-btn')) return;
-                var text = el.textContent.trim();
-                if (!SPEAKABLE.test(text)) return;
+                if (!host || el.querySelector('.audio-btn')) return;
+                if (el.tagName === 'STRONG' && host.querySelector('.audio-btn')) return;
+
+                var text = (PICK[rule.pick] || ownText)(el);
+                if (!usable(text)) return;
+                if (rule.requireTarget && !looksTarget(text)) return;
+
+                el.dataset.audioDone = '1';
                 place(el, text);
             });
         });
@@ -195,28 +408,65 @@
         attachOptedIn();
     }
 
-    function addNotice() {
-        if (document.querySelector('.audio-notice')) return;
+    function placeNotice(note) {
         var wrap = document.querySelector('.content-wrap') || document.body;
         var first = wrap.querySelector('h1');
+        if (first && first.parentNode) first.parentNode.insertBefore(note, first.nextSibling);
+        else wrap.insertBefore(note, wrap.firstChild);
+    }
+
+    function addNotice() {
+        if (document.querySelector('.audio-notice')) return;
         var note = document.createElement('p');
         note.className = 'audio-notice';
         note.innerHTML = '🔇 <strong>No ' + CONFIG.langName + ' voice found on this device.</strong> ' +
             'Audio playback is hidden. To enable it, install a ' + CONFIG.langName +
             ' language pack (Windows: Settings → Time &amp; Language → Language → ' +
             'Add a language → ' + CONFIG.addLanguageAs + '), then reload.';
-        if (first && first.parentNode) first.parentNode.insertBefore(note, first.nextSibling);
-        else wrap.insertBefore(note, wrap.firstChild);
+        placeNotice(note);
+
+        if (!CONFIG.fallbackName) return;
+        /* Second notice, shown only when a stand-in voice is doing the talking. */
+        if (document.querySelector('.audio-fallback')) return;
+        var fb = document.createElement('p');
+        fb.className = 'audio-fallback';
+        fb.innerHTML = '🗣️ <strong>Using a ' + CONFIG.fallbackName + ' voice.</strong> ' +
+            'No ' + CONFIG.langName + ' voice is installed, so audio is spoken by a ' +
+            CONFIG.fallbackName + ' voice, which shares most of ' + CONFIG.langName +
+            "'s sounds. The pronunciation is close but not native.";
+        placeNotice(fb);
+    }
+
+    /* Content built by a page script (a JS-populated vocabulary grid) appears after the
+       first attach pass. Watch for it, re-attaching once the DOM settles. The observer
+       is detached while attaching so our own buttons do not retrigger it. */
+    var observer = null;
+    var rescanTimer = null;
+
+    function startRescan() {
+        if (!CONFIG.rescan || observer || typeof MutationObserver === 'undefined') return;
+        observer = new MutationObserver(function () {
+            clearTimeout(rescanTimer);
+            rescanTimer = setTimeout(function () {
+                observer.disconnect();
+                attachButtons();
+                observer.observe(document.body, { childList: true, subtree: true });
+            }, 150);
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
     }
 
     function init() {
         voice = findVoice();
         if (!voice) {
             document.documentElement.classList.add('no-tts-voice');
+            document.documentElement.classList.remove('tts-fallback');
             return;
         }
         document.documentElement.classList.remove('no-tts-voice');
+        document.documentElement.classList.toggle('tts-fallback', isFallbackVoice(voice));
         attachButtons();
+        startRescan();
     }
 
     /* Delegated, so buttons injected later still work. site-nav.js binds one

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>French Pronunciation Reader - French Course</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+
+<h1>🔊 Pronunciation Reader: Type It, Hear It, See Why</h1>
+
+<p>Paste or type any French text below. The page reads it aloud, and for every word shows
+which letters are <strong>silent</strong>, which vowels are <strong>nasal</strong>, and where
+the words <strong>link together</strong>. Click any word in the text to hear just that word.</p>
+
+<div class="reader-panel">
+    <label class="reader-label" for="reader-input">Texte français</label>
+    <textarea id="reader-input" class="reader-input" rows="4" lang="fr" spellcheck="false"
+>Bonjour ! Je m'appelle Anne et je suis étudiante. Les amis sont arrivés chez elle. Nous avons deux heures.</textarea>
+
+    <div class="reader-controls">
+        <div class="reader-control">
+            <label for="reader-voice">Voice</label>
+            <select id="reader-voice"></select>
+        </div>
+        <div class="reader-control">
+            <label for="reader-rate">Speed <span id="reader-rate-value">0.90×</span></label>
+            <input type="range" id="reader-rate" min="0.5" max="1.2" step="0.05" value="0.9">
+        </div>
+        <div class="reader-control reader-check">
+            <label for="reader-merger">
+                <input type="checkbox" id="reader-merger">
+                Merge <code>un</code> into <code>/ɛ̃/</code> (modern Paris)
+            </label>
+        </div>
+        <div class="reader-buttons">
+            <button type="button" id="reader-play" class="reader-btn reader-btn-primary">▶&nbsp; Lire à voix haute</button>
+            <button type="button" id="reader-stop" class="reader-btn" disabled>■&nbsp; Arrêter</button>
+        </div>
+    </div>
+
+    <p id="reader-unsupported" class="reader-notice" hidden>
+        🔇 <strong>No French voice found on this device.</strong> The analysis below still works,
+        but nothing can be read aloud. To enable audio, install a French language pack
+        (Windows: Settings → Time &amp; Language → Language → Add a language → Français),
+        then reload.
+    </p>
+
+    <div id="reader-display" class="reader-display" lang="fr"></div>
+    <p id="reader-summary" class="reader-summary"></p>
+</div>
+
+<h2>🔗 Liaisons</h2>
+
+<p>A liaison sounds a normally-silent final consonant because the next word begins with a
+vowel. Some are required, some optional, and a few are forbidden.</p>
+
+<div id="reader-liaisons" class="reader-liaisons no-audio"></div>
+
+<h2>📋 Word Analysis</h2>
+
+<div class="table-wrap no-audio">
+    <table class="reader-table">
+        <tr><th>Spelling</th><th>Broad transcription</th><th>Syllables</th><th>Notes</th></tr>
+        <tbody id="reader-analysis"></tbody>
+    </table>
+</div>
+
+<h2>🧠 How French Pronunciation Works</h2>
+
+<div class="card card-warning no-audio">
+    <h4>⚠️ French has no word stress</h4>
+    <p>If you have studied Spanish or Italian, unlearn this: French words do <strong>not</strong>
+    carry a fixed stressed syllable. Stress is a property of the <em>phrase</em>, not the word —
+    it falls on the last full syllable of a rhythmic group. <em>Un petit chat</em> is one group,
+    stressed on <em>chat</em>. That is why this page shows you silent letters, nasal vowels and
+    liaison instead of a "stressed syllable" column: French has none to show.</p>
+</div>
+
+<div class="card card-info no-audio">
+    <h4>🤫 Silent letters</h4>
+    <p>Most final consonants are silent: <em>peti<span class="r-silent">t</span></em>,
+    <em>gran<span class="r-silent">d</span></em>, <em>fran&ccedil;ai<span class="r-silent">s</span></em>,
+    <em>tem<span class="r-silent">ps</span></em>. The classic mnemonic is that
+    <strong>C, R, F, L</strong> tend to survive — think of the English word <em>careful</em>:
+    <em>ave<strong>c</strong></em>, <em>me<strong>r</strong></em>, <em>neu<strong>f</strong></em>,
+    <em>seu<strong>l</strong></em>. But <code>-er</code> and <code>-ez</code> endings are
+    <code>/e/</code> (<em>parler</em>, <em>parlez</em>), and a final <code>c</code> falls silent
+    after a nasal vowel (<em>blan<span class="r-silent">c</span></em>).</p>
+    <p>A final <code>e</code> is silent too, but it <em>protects</em> the consonant in front of
+    it: <em>chose</em> is <code>/ʃoz/</code>, not <code>/ʃo/</code>.</p>
+</div>
+
+<div class="card card-info no-audio">
+    <h4>👃 Nasal vowels</h4>
+    <p>A vowel followed by <code>n</code> or <code>m</code> becomes nasal — the
+    <code>n</code> itself disappears — unless the <code>n</code>/<code>m</code> is doubled or
+    followed by another vowel. Compare <em>bon</em> <code>/bɔ̃/</code> with <em>bonne</em>
+    <code>/bɔn/</code>.</p>
+    <p>There are four: <code>/ɑ̃/</code> (<em>temps</em>), <code>/ɛ̃/</code> (<em>pain</em>),
+    <code>/ɔ̃/</code> (<em>bon</em>), <code>/œ̃/</code> (<em>brun</em>). Most speakers in Paris now
+    merge <code>/œ̃/</code> into <code>/ɛ̃/</code>, which is what the checkbox above controls.</p>
+</div>
+
+<div class="card card-info no-audio">
+    <h4>🔗 Liaison, and the h that blocks it</h4>
+    <p><strong>Required</strong> after determiners, pronouns and short prepositions:
+    <em>les&#8288;‿&#8288;amis</em> <code>/le.za.mi/</code>, <em>nous&#8288;‿&#8288;avons</em>,
+    <em>deux&#8288;‿&#8288;heures</em>. The linking sound is not always the letter you see:
+    <code>s</code> and <code>x</code> link as <code>/z/</code>, and <code>d</code> links as
+    <code>/t/</code> — <em>un grand&#8288;‿&#8288;arbre</em> sounds like <em>gran-t-arbre</em>.</p>
+    <p><strong>Forbidden</strong> after <em>et</em>, and before an <em>h aspiré</em> — a small
+    set of words, mostly Germanic loans, whose silent <code>h</code> still blocks linking:
+    <em>les héros</em>, <em>les haricots</em>. Compare <em>les hôtels</em>, where the
+    <code>h</code> is mute and the liaison is required. There is no rule for which is which;
+    it must be learned word by word.</p>
+</div>
+
+<div class="card card-warning no-audio">
+    <h4>📐 About the transcription</h4>
+    <p>Spanish spelling is close to phonemic, so a rule engine can transcribe it almost
+    perfectly. French is not, so the transcription here is a <strong>good approximation, not an
+    authority</strong>. It handles the regular machinery — silent finals, <em>e</em> muet, nasal
+    vowels, <code>-tion</code>, <code>-ill-</code>, open and closed <code>eu</code>/<code>o</code>
+    — and keeps a small lexicon for words no rule can reach (<em>femme</em>
+    <code>/fam/</code>, <em>monsieur</em> <code>/məsjø/</code>, <em>fils</em>
+    <code>/fis/</code>, <em>oignon</em> <code>/ɔɲɔ̃/</code>).</p>
+    <p>One case needs context rather than spelling: a final <code>-ent</code> is nasal in a noun
+    (<em>un client</em>, <em>un moment</em>) but completely silent as a verb ending
+    (<em>ils parlent</em> = <code>/paʁl/</code>). The page resolves it by looking at whether the
+    previous word is <em>ils</em> or <em>elles</em>. Outside that pattern it guesses the noun.</p>
+    <p>The <em>audio</em> is unaffected by any of this — it comes from your system's French
+    voice, not from these rules.</p>
+</div>
+
+<!-- BEGIN footer-nav (managed by add_footer_nav.py) -->
+<nav class="lesson-nav" aria-label="Lesson Navigation">
+    <a href="french_travel_culture_canada.html" class="prev-lesson">&larr; Previous: Travel & Culture: Québec & Francophone Canada</a>
+    <a href="index.html" class="home-link">&#127968; Course Home</a>
+</nav>
+
+<footer class="site-footer">
+    <p>&copy; 2026 All rights reserved.</p>
+    <div class="footer-links">
+        <a href="https://rays-home.netlify.app/">Ray's House of Fun</a>
+        <a href="https://rays-home.netlify.app/contact">Contact</a>
+        <a href="#" onclick="window.print(); return false;">Print Page</a>
+    </div>
+</footer>
+<!-- END footer-nav -->
+
+<script src="site-nav.js"></script>
+<script src="reader.js"></script>
+</body>
+</html>

@@ -66,6 +66,7 @@ LESSONS: list[tuple[str, str]] = [
     ("french_emotions_relationships.html",   "Emotions & Relationships"),
     ("french_travel_culture_france.html",    "Travel & Culture: France"),
     ("french_travel_culture_canada.html",    "Travel & Culture: Qu\u00e9bec & Francophone Canada"),
+    ("french_reader.html",                   "Pronunciation Reader"),
 ]
 
 # Idempotency sentinels
