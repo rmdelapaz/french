@@ -1,7 +1,11 @@
 # French Course — Build Status
 
-CEFR **A1–A2 complete**: 28 lessons (17 topic + 11 Grammar Essentials) + 5 practice tools.
-See `docs/a1-a2-roadmap.md` for the audit that drove the restructure and the conventions to follow.
+CEFR **A1–B2 complete**: two tiers.
+- **A1–A2** (site root): 28 lessons (17 topic + 11 Grammar Essentials) + 5 practice tools.
+- **B1–B2** (`/intermediate/`): 26 lessons (13 B1 + 13 B2) + 5 practice tools.
+
+See `docs/a1-a2-roadmap.md` and `intermediate/docs/b1-b2-roadmap.md` for the audits that drove each
+tier and the conventions to follow.
 
 ## Infrastructure
 - [x] styles/main.css (France/Canada callouts, dialect-compare grid, A1/A2 tier headers + level badges,
@@ -15,6 +19,15 @@ See `docs/a1-a2-roadmap.md` for the audit that drove the restructure and the con
 - [x] lesson-content.js — objectives + summaries + time + CEFR level, 28 lessons
 - [x] add_footer_nav.py (LESSONS list = the canonical lesson order; re-run with `--apply --no-backup`)
 - [x] build_anki.py → french_course.apkg (576 notes / 1,152 cards)
+- [x] images/vocab/ — 63 web-ready WebP vocabulary illustrations (512×512, ~1.2 MB total),
+      **reused from the ESL course** (`~/projects/esl/images/vocab/`). That set is slugged by
+      *English concept* (`apple.webp`, `bus-stop.webp`), not by an English word form, so the art is
+      language-neutral and matches French entries through their `en` gloss.
+      Copied into this repo rather than referenced cross-origin, so the site stays self-contained
+      and independently deployable (see the shared-image decision: share the SOURCE, not the runtime).
+      Re-sync after adding vocabulary:
+      `for s in $(grep -o '"img": "[^"]*"' vocab-data.js | cut -d'"' -f4 | sort -u); do
+         cp ~/projects/esl/images/vocab/$s.webp images/vocab/; done`
 
 ## Lessons — A1 (1–15)
 - [x] 1. french_alphabet_pronunciation — alphabet, accents, nasals, liaison, silent letters
@@ -56,6 +69,28 @@ See `docs/a1-a2-roadmap.md` for the audit that drove the restructure and the con
 - [x] french_reader.html — type-any-text pronunciation reader
 - [x] french_course.apkg — Anki deck
 
+## Vocabulary illustrations (A1/A2 only)
+
+`learn.js` already supported this — `vocabImg()` renders `/images/vocab/<img>.webp?v=VOCAB_IMG_VER`
+in the "Words You Learned" review list and on the flashcard face, and `styles/learn.css` already had
+`.lx-word-img` / `.lx-flash-img` (incl. a dark-mode variant). The capability was simply dormant: no
+`images/` folder and no `img` fields. Reusing the ESL art activated it with **no engine changes**.
+
+- **71 `img` fields** across **17 of the 28 beginner lessons**, drawing on **63 distinct images**
+  (some are shared — `email` ×3, `shop` ×4, `happy`, `expensive`, `bill`, `bathroom`, `angry` ×2).
+- Matching is by normalised English gloss (strip articles, leading `to `, parentheticals), plus a
+  small hand-checked synonym map (`soccer`→`football`, `swimming`→`swim`, `a train station`→`station`).
+- **The B1–B2 tier gets none, deliberately.** Only 2 of its 520 entries matched anything, because
+  intermediate vocabulary is grammar metalanguage and abstract terms (*que je sois*, *bien que*,
+  *la concordance des temps*). Two illustrations in 520 entries would read as an inconsistency, not
+  a feature. `intermediate/vocab-data.js` has no `img` fields.
+- Two matches were rejected on review: `traverser` ("to cross") had matched **angry** through the
+  British-English sense of *cross*, and `les toilettes` had matched **bathroom** — the same picture
+  as *la salle de bains*, which undercuts the lesson that teaches they are separate rooms.
+- `"img"` is a trailing key on the entry line, matching the Spanish course's convention. It is
+  ignored by `build_anki.py` (which parses this file as JSON) and by `glossary.js`, so the Anki deck
+  and glossary are unchanged.
+
 ## Design pattern notes
 - Lesson page: `<h1>` → (learn.js injects objectives) → topic sections with tables →
   `.dialect-compare` 🇫🇷/🇨🇦 boxes → `.practice-section` exercises → quiz →
@@ -67,6 +102,86 @@ See `docs/a1-a2-roadmap.md` for the audit that drove the restructure and the con
 - Exercise items need `_____` **and** an inline `(Answer: x)`, one blank per `<li>`; accent-free
   alternatives go after a `|`.
 
+---
+
+# Intermediate Tier (B1–B2) — `/intermediate/`
+
+**26 lessons**, count justified in `intermediate/docs/b1-b2-roadmap.md` §4 (not the siblings' default
+24: −5 because A1/A2 already closed object pronouns, commands, reflexives, the two pasts and basic
+relatives; +7 for the subjunctive's three lessons, the four structures with no Spanish counterpart,
+the passé simple, the register/argot split and the Québécois deep dive).
+
+## Shared with the beginner tier (NOT copied or forked)
+- `/learn.js` — already tier-aware: detects `/intermediate/`, switches to the `french-int-`
+  localStorage namespace and resolves `french_lesson_N`.
+- `/glossary.js` — same detection, uses `french-int-srs`.
+- `/site-nav.js`, `/audio.js`, `/styles/main.css`, `/styles/learn.css`, `/favicon.png`.
+
+## Per-tier files
+- [x] `intermediate/vocab-data.js` — 520 words across 26 lessons, + titles and levels maps (no
+      `slugs` map: pages are numbered, so learn.js/cando.js fall back to `french_lesson_N.html`)
+- [x] `intermediate/lesson-content.js` — 156 objectives + 156 summary points, + time and CEFR level
+- [x] `intermediate/index.html` — B1/B2 tier headers, 26 cards, tools grid, back-link to A1–A2
+- [x] `intermediate/cando.js` + `cando.html` — 90 descriptors, own key **`french-int-cando`**
+- [x] `intermediate/cheatsheet.js` + `cheatsheet.html` — 17 categories / 134 rows (grammar, not
+      survival phrases)
+- [x] `intermediate/readings.js` + `readings.html` — 8 pieces, 62 lines, 24 questions
+- [x] `intermediate/glossary.html` — loads the **shared** `/glossary.js` with tier vocab
+- [x] `intermediate/build_anki.py` → `french_intermediate.apkg` (603 notes / 1,206 cards);
+      own `MODEL_ID 1758500021` / `DECK_ID 1758500022`, distinct from the beginner deck's
+- [x] Footer prev/next chain is **hand-written static HTML** in each page. The root
+      `add_footer_nav.py` governs the beginner tier only — its `LESSONS` list was not touched.
+
+## Lessons — B1 (1–13)
+- [x] 1. Le Plus-que-parfait — forms, PQP/PC/imparfait, si seulement, après avoir
+- [x] 2. Le Futur Antérieur — forms, quand/dès que/une fois que + futur, supposition
+- [x] 3. Le Conditionnel — présent & passé, advice/reproach, journalistic conditional
+- [x] 4. Les Phrases avec Si — all three types, mixed, si ≠ whether
+- [x] 5. Le Subjonctif Présent — ils- stem, eight irregulars, three trigger families
+- [x] 6. Le Subjonctif — conjunctions, impersonals, superlatives, ne explétif
+- [x] 7. Le Subjonctif Passé — mood decision procedure, dodging the subjunctive
+- [x] 8. Relative Pronouns — dont, lequel/auquel/duquel, ce qui/ce que/ce dont, où
+- [x] 9. Verbs + à / de / bare infinitive — three patterns, two-object verbs, y vs en
+- [x] 10. Participle Agreement with avoir — preceding COD, que, reflexives, invariables
+- [x] 11. The Passive, on, se faire — par vs de, pronominal passive
+- [x] 12. Participe Présent, Gérondif & Adjectif Verbal — one ending, three jobs
+- [x] 13. Le Discours Indirect — back-shift map, reported questions and commands
+
+## Lessons — B2 (14–26)
+- [x] 14. Le Faire Causatif — pronoun placement, fait invariable, laisser/voir/entendre
+- [x] 15. Negation & Restriction — ne… que, guère/nullement, ni…ni, dropped ne
+- [x] 16. The Register Ladder — soutenu/courant/familier as grammar, on vs nous, tu/vous
+- [x] 17. Argot, Verlan & Screen French — verlan mechanics, core argot, SMS
+- [x] 18. Reading Literary & Journalistic French — passé simple, passé antérieur, headlines
+- [x] 19. Building & Decoding Vocabulary — affixes, gender from suffix, nominalisation, faux amis
+- [x] 20. Idioms & Expressions Figées — body/animal/food, proverbs, register
+- [x] 21. Argumentation, Opinion & Debate — thèse/antithèse/synthèse, concede-then-rebut
+- [x] 22. Formal Writing — formule d'appel & de politesse, courriel, model complaint
+- [x] 23. Le CV & la Lettre de Motivation — sections, action verbs, vous–moi–nous, 🇫🇷/🇨🇦
+- [x] 24. Understanding Authentic Media — connected speech, news, film, source reliability
+- [x] 25. Le Français Québécois — affrication, joual, lexicon, sacres, loi 101
+- [x] 26. DELF B1 & B2 — four papers, note éliminatoire, strategy, study plan (capstone)
+
+**Content:** 26 lessons, ~30,100 words, 104 exercise groups (4 per lesson), 78 quiz questions,
+and a 🇫🇷/🇨🇦 `.dialect-compare` box in every lesson.
+
+## QA (headless Chromium, `python3 -m http.server 8461` from the french folder)
+All 31 intermediate pages + the 33 beginner pages load with **0 console errors**; objectives render
+below the `<h1>` on all 26 lessons (exactly one objectives box and one summary box each); every
+exercise group scores **N/N** on reveal-then-check; no answer-key leaks and no raw `_____` visible;
+**0 broken links** across 67 internal targets; prev/next chain and `<h1>` numbering verified 1→26
+(lesson 1 back to `/index.html`, lesson 26 on to `cando.html`); light, dark and 390px mobile all
+clean; localStorage namespaces verified isolated (`french-*` vs `french-int-*`) in fresh contexts.
+
+**Shared-CSS fix made during QA:** `.g-select` had no `max-width`, so a long lesson-title option in
+the glossary filter forced the flex row — and the page — past the viewport (125px overflow on the
+**beginner** glossary too, a pre-existing bug). Fixed in `styles/learn.css` + `.table-wrap` in
+`styles/main.css`; both tiers now 0px overflow at 390px.
+
+---
+
 ## Deployment
-- Netlify: rays-french.netlify.app — static, no build step.
-- Hub entry (rayhome sites.json) refreshed for the A1/A2 restructure on 2026-09-22.
+- Netlify: rays-french.netlify.app — static, no build step. Intermediate tier at
+  `rays-french.netlify.app/intermediate/`.
+- Hub entries (rayhome sites.json): A1/A2 refreshed 2026-09-22; a **second** entry for
+  "French Intermediate (B1–B2)" added 2026-09-22.

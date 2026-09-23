@@ -215,7 +215,7 @@ dd { margin-left: 1.25rem; padding-bottom: .5rem; }
 /* ===========================
    Tables
    =========================== */
-.table-wrap { overflow-x: auto; }
+.table-wrap { overflow-x: auto; max-width: 100%; }
 table {
     width: 100%;
     border-collapse: collapse;
@@ -797,6 +797,9 @@ html.no-tts-voice .audio-notice { display: block; }
 .tier-header.tier-a1 { border-left-color: #22c55e; }
 .tier-header.tier-a2 { border-left-color: #3b82f6; }
 .tier-header.tier-tools { border-left-color: #a855f7; }
+/* intermediate tier (/intermediate/) */
+.tier-header.tier-b1 { border-left-color: #f59e0b; }
+.tier-header.tier-b2 { border-left-color: #e11d48; }
 
 .lesson-card { position: relative; }
 .level-badge {
@@ -812,6 +815,8 @@ html.no-tts-voice .audio-notice { display: block; }
 }
 .level-badge.level-a1 { background: #22c55e; }
 .level-badge.level-a2 { background: #3b82f6; }
+.level-badge.level-b1 { background: #f59e0b; }
+.level-badge.level-b2 { background: #e11d48; }
 
 /* Grammar lessons read as a distinct sub-track inside each tier. */
 .lesson-card.grammar-lesson {
