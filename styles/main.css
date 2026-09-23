@@ -51,6 +51,18 @@
     --france-border: #002395;
     --canada-bg: #fef2f2;
     --canada-border: #d52b1e;
+    /* --- Aliases consumed by the learning layer (styles/learn.css) --- */
+    --bg-primary:    var(--bg-color);
+    --bg-secondary:  var(--card-bg);
+    --text-primary:  var(--text-color);
+    --text-secondary: var(--text-light);
+    --text-muted:    var(--text-light);
+    --border:        var(--border-color);
+    --accent:        var(--primary-color);
+    --accent-light:  var(--primary-light);
+    --card-shadow:   var(--shadow-md);
+    --table-header:  #eef2ff;
+
 }
 
 /* ===========================
@@ -82,6 +94,9 @@
     --france-border: #6082e6;
     --canada-bg: rgba(213, 43, 30, 0.12);
     --canada-border: #f87171;
+    /* --- Learning-layer aliases (dark) --- */
+    --table-header:  #243049;
+
 }
 
 /* ===========================
@@ -764,3 +779,46 @@ html.no-tts-voice .audio-notice { display: block; }
     .reader-buttons { width: 100%; }
     .reader-btn { flex: 1; }
 }
+
+/* ===========================
+   A1 / A2 tier headings and lesson badges (course home)
+   =========================== */
+.tier-header {
+    max-width: 1200px;
+    margin: 2.75rem auto 1.25rem;
+    padding: 1.1rem 1.4rem;
+    border-radius: var(--radius-md);
+    border-left: 5px solid var(--primary-color);
+    background: var(--card-bg);
+    box-shadow: var(--shadow-sm);
+}
+.tier-header h2 { margin: 0 0 .4rem; font-size: 1.45rem; }
+.tier-header p { margin: 0; color: var(--text-light); max-width: 70ch; }
+.tier-header.tier-a1 { border-left-color: #22c55e; }
+.tier-header.tier-a2 { border-left-color: #3b82f6; }
+.tier-header.tier-tools { border-left-color: #a855f7; }
+
+.lesson-card { position: relative; }
+.level-badge {
+    position: absolute;
+    top: .85rem;
+    right: .9rem;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: .18rem .5rem;
+    border-radius: 999px;
+    color: #fff;
+}
+.level-badge.level-a1 { background: #22c55e; }
+.level-badge.level-a2 { background: #3b82f6; }
+
+/* Grammar lessons read as a distinct sub-track inside each tier. */
+.lesson-card.grammar-lesson {
+    border-left: 4px solid #f59e0b;
+    background: linear-gradient(180deg, rgba(245, 158, 11, .06), transparent 60%), var(--card-bg);
+}
+[data-theme="dark"] .lesson-card.grammar-lesson {
+    background: linear-gradient(180deg, rgba(245, 158, 11, .12), transparent 60%), var(--card-bg);
+}
+.lesson-card.grammar-lesson .lesson-number { background: #f59e0b; }
