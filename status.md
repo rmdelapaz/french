@@ -19,8 +19,9 @@ tier and the conventions to follow.
 - [x] lesson-content.js — objectives + summaries + time + CEFR level, 28 lessons
 - [x] add_footer_nav.py (LESSONS list = the canonical lesson order; re-run with `--apply --no-backup`)
 - [x] build_anki.py → french_course.apkg (576 notes / 1,152 cards)
-- [x] images/vocab/ — 63 web-ready WebP vocabulary illustrations (512×512, ~1.2 MB total),
-      **reused from the ESL course** (`~/projects/esl/images/vocab/`). That set is slugged by
+- [x] images/vocab/ — 97 web-ready WebP vocabulary illustrations (512×512, ~2.1 MB total):
+      **90 reused** from the sibling courses (ESL 62 · Spanish 24 · Tagalog 4) + **7 generated
+      for this course** (see "Bespoke illustrations" below). That set is slugged by
       *English concept* (`apple.webp`, `bus-stop.webp`), not by an English word form, so the art is
       language-neutral and matches French entries through their `en` gloss.
       Copied into this repo rather than referenced cross-origin, so the site stays self-contained
@@ -76,7 +77,7 @@ in the "Words You Learned" review list and on the flashcard face, and `styles/le
 `.lx-word-img` / `.lx-flash-img` (incl. a dark-mode variant). The capability was simply dormant: no
 `images/` folder and no `img` fields. Reusing the ESL art activated it with **no engine changes**.
 
-- **71 `img` fields** across **17 of the 28 beginner lessons**, drawing on **63 distinct images**
+- **109 `img` fields** across **17 of the 28 beginner lessons**, drawing on **97 distinct images**
   (some are shared — `email` ×3, `shop` ×4, `happy`, `expensive`, `bill`, `bathroom`, `angry` ×2).
 - Matching is by normalised English gloss (strip articles, leading `to `, parentheticals), plus a
   small hand-checked synonym map (`soccer`→`football`, `swimming`→`swim`, `a train station`→`station`).
@@ -90,6 +91,74 @@ in the "Words You Learned" review list and on the flashcard face, and `styles/le
 - `"img"` is a trailing key on the entry line, matching the Spanish course's convention. It is
   ignored by `build_anki.py` (which parses this file as JSON) and by `glossary.js`, so the Anki deck
   and glossary are unchanged.
+
+## Reuse pool: check ALL THREE sibling courses, not just ESL
+
+There are three existing art sets and they share **the same house style** (512×512, warm-cream
+#FFF3E0), so they are freely interchangeable — but they are **slugged in different languages**, which
+is why a naive filename comparison shows almost no overlap:
+
+| course | files | slugged by | e.g. |
+|---|---|---|---|
+| `~/projects/esl/images/vocab/` | 154 | **English concept** | `apple.webp`, `bus-stop.webp` |
+| `~/projects/spanish/images/vocab/` | 125 | Spanish word | `casa.webp`, `computadora.webp` |
+| `~/projects/tagalog/images/vocab/` | 116 | Tagalog word | `bahay.webp`, `pamilya.webp` |
+
+Translated to English concepts they form a pool of **259 distinct concepts**, of which **105 are NOT
+in the ESL set**. Matching only against ESL therefore misses roughly 40% of the available art.
+**Rebuild the Spanish/Tagalog filename→concept maps before any future reuse pass** — they are cheap
+to write from the filename lists and are the whole trick.
+
+Filled from Spanish/Tagalog on this pass (28 concepts → 29 entries): lunch, dinner, breakfast, tip,
+family, parents, kind, good, straight-ahead, far, subway, cough, pharmacy, prescription, medicine,
+sun, rain, autumn, meeting, salary, schedule, engineer, university, screen, password, video-call,
+friend, double-room.
+
+Rejected on review even though art existed: `vraiment` → *talaga*/*hindi-nga* (a thinking pose and a
+shocked face — too ambiguous for "really"), `délicieux` → *masarap* (a Filipino plate, culturally
+off-key in a French food lesson), and `les toilettes` → *bathroom* (already rejected: it duplicates
+*la salle de bains* in a lesson that teaches they are separate rooms).
+
+## Bespoke illustrations generated for this course (2026-09-22)
+
+Seven images were generated with ChatGPT. **Five were genuinely absent from all three sibling
+sets** (`short`, `car`, `poutine`, `sugar-shack`, `bakery`); two (`house`, `computer`) duplicated
+art that already existed in Spanish/Tagalog and would have been avoided by running the
+cross-course audit above FIRST. Note `small`/`pequeño`/`maliit` are the same mouse in all three
+sets, so `short` really did have to be drawn and dropped into the same
+`images/vocab/` folder. **Use the course's canonical prompt** — it lives in Ray's ChatGPT history
+(chat "Manga Supermarket Illustration") and is the reason the whole set matches:
+
+> Same manga style, palette, line weight and flat warm-cream (#FFF3E0) background as the previous
+> image. STYLE: A clean modern anime/manga illustration, cel-shaded with bold even black outlines of
+> consistent medium weight. Two-tone soft cel shading, no photorealism, no heavy gradients. Bright
+> cheerful lightly-saturated colors, soft light from the top-left. Background: a single flat pastel
+> warm-cream tint (#FFF3E0) with one subtle soft radial highlight behind the subject - no scene, no
+> patterns, no gradient bands. Composition: one single subject, centered, fully visible, about 10%
+> empty margin on all sides, square 1:1 framing, eye-level straight-on or slight 3/4 angle. No text,
+> no letters, no numbers, no labels, no speech bubbles, no watermark, no border or frame. Simple,
+> friendly. Output a square 1024x1024 image. SUBJECT: `<subject>`
+
+| slug | replaces / adds | wired to |
+|---|---|---|
+| `short` | **replaces the mouse** (`small.webp`, deleted) | `petit(e)` — a short adult beside a tall one, so it pairs with `grand(e)`'s height comparison |
+| `car` | new | `un char` 🇨🇦 + `une voiture` — the flagship 🇫🇷/🇨🇦 contrast in L3 |
+| `house` | **avoidable** — Spanish `casa` / Tagalog `bahay` already existed | `la maison` (L4) + `une maison` (L14) |
+| `poutine` | new | `une poutine` (L28) |
+| `sugar-shack` | new | `une cabane à sucre` (L11 + L28) |
+| `bakery` | new | `une boulangerie` (L13) |
+| `computer` | **avoidable** — Spanish `computadora` already existed | `un ordinateur` (L25) |
+
+Pipeline (Playwright MCP → ChatGPT, Ray's logged-in `.pw-chrome` profile): submit prompt, wait
+~3–5 min, grab the LAST `img` whose `src` contains `estuary/content` with `naturalWidth >= 800`,
+`fetch` it **inside the browser** (carries auth cookies) → `btoa` → save, then
+`.gen_scratch/french/place_vocab.py <b64> <slug>` (square-crop → 512 → WebP q82) and
+`.gen_scratch/french/set_img.py <slug> "<fr>" ...` to wire entries by exact `fr` match.
+
+**Rules learned the hard way:** generate **one at a time** (parallel tabs cause failures); keep them
+in **one chat** so "same as the previous image" anchors the style; compare the new image's `id=` to
+the previous last image before fetching, or you silently re-download the earlier picture; and check
+the semantics before wiring — a house image was briefly attached to `un appartement`, which is wrong.
 
 ## Design pattern notes
 - Lesson page: `<h1>` → (learn.js injects objectives) → topic sections with tables →
