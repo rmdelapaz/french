@@ -1,11 +1,12 @@
 # French Course — Build Status
 
-CEFR **A1–B2 complete**: two tiers.
+CEFR **A1–C2 complete**: three tiers.
 - **A1–A2** (site root): 28 lessons (17 topic + 11 Grammar Essentials) + 5 practice tools.
 - **B1–B2** (`/intermediate/`): 26 lessons (13 B1 + 13 B2) + 5 practice tools.
+- **C1–C2** (`/advanced/`): 24 lessons (13 C1 + 11 C2) + 5 practice tools.
 
-See `docs/a1-a2-roadmap.md` and `intermediate/docs/b1-b2-roadmap.md` for the audits that drove each
-tier and the conventions to follow.
+See `docs/a1-a2-roadmap.md`, `intermediate/docs/b1-b2-roadmap.md` and
+`advanced/docs/c1-c2-roadmap.md` for the audits that drove each tier and the conventions to follow.
 
 ## Infrastructure
 - [x] styles/main.css (France/Canada callouts, dialect-compare grid, A1/A2 tier headers + level badges,
@@ -254,3 +255,105 @@ the glossary filter forced the flex row — and the page — past the viewport (
   `rays-french.netlify.app/intermediate/`.
 - Hub entries (rayhome sites.json): A1/A2 refreshed 2026-09-22; a **second** entry for
   "French Intermediate (B1–B2)" added 2026-09-22.
+
+
+---
+
+# Tier 3 — C1/C2 Advanced (`/advanced/`)
+
+Built 2026-09-23. Read `advanced/docs/c1-c2-roadmap.md` before touching this tier: it holds the
+audit, the §3 derivation of the lesson count and the conventions.
+
+## Why 24 lessons
+Derived, not chosen (per the course-size SOP). 29 candidate topics from the §2 audit, **five honest
+merges**, → 24. Fewer than a standard C1/C2 syllabus would need because B1–B2 here already closed
+the subjunctive inventory, register, argot, idiom, formal correspondence, media comprehension **and
+a full Québécois deep dive** (−6); more than the Spanish sibling's 22 because French adds a
+phonology lesson (liaison / e caduc / prosody), a spoken-grammar lesson, `les accords difficiles`,
+expert orthography and typography, **two** francophonie lessons (Québec being already spent), the
+French academic genres, versification, humour and translation. Split **C1 = 1–13, C2 = 14–24**.
+
+## Architecture
+- Pages numbered `advanced/french_lesson_N.html`, N = 1…24.
+- **Shared, not copied:** `/learn.js`, `/glossary.js`, `/site-nav.js`, `/audio.js`, `styles/*`.
+  `learn.js` and `glossary.js` were **already** `/advanced/`-aware (`IS_ADV`, `TIER_BASE`,
+  namespace `french-adv-`, SRS key `french-adv-srs`) — no patch was needed.
+- Per-tier files only: `vocab-data.js`, `lesson-content.js`, `index.html`, `cando.js/.html`,
+  `cheatsheet.js/.html`, `readings.js/.html`, `glossary.html`, `build_anki.py`.
+- `cando.js` key: **`french-adv-cando`**. Anki DECK/MODEL IDs 1758900042/41 (distinct from both
+  other decks).
+- Footer prev/next hand-written; `add_footer_nav.py` still governs the beginner tier only.
+- **No vocabulary images**, for the same reason as the intermediate tier: the vocabulary is
+  grammatical and abstract metalanguage.
+
+## Data & companions
+- [x] `vocab-data.js` — **480 words** across 24 lessons (`{fr, pron, en}`) + `titles` + `levels`,
+      no `slugs` map (numbered pages fall through).
+- [x] `lesson-content.js` — 144 objectives + 144 summary points, plus time and CEFR band per lesson.
+- [x] `cando.html` — **119 C1/C2 descriptors** in 9 groups, key `french-adv-cando`.
+- [x] `glossary.html` — 480 rows, shared `/glossary.js`.
+- [x] `cheatsheet.html` — **19 categories / 166 rules and formulas** (agreements, liaison,
+      connectives, academic, legal, rhetoric, versification, translation, DALF).
+- [x] `readings.html` — **8 register pieces / 62 lines / 24 questions**: spoken French, an
+      editorial, a lease extract, a compte rendu, a literary page, a quatrain in alexandrines, a
+      Swiss/Belgian pair and an Abidjan conversation.
+- [x] `french_advanced.apkg` — **574 notes / 1,148 cards**.
+
+## Lessons
+C1: 1 Subjonctif sans limites · 2 Phrase longue & mise en relief · 3 Style nominal · 4 Connecteurs
+C1 · 5 Pronoms à la limite · 6 Régime prépositionnel & collocations · 7 Accords difficiles ·
+8 Liaison, enchaînement & prosodie · 9 Grammaire du français parlé · 10 Atténuation & politesse ·
+11 Francophonie européenne · 12 Francophonie africaine, maghrébine & créole · 13 Humour & second degré.
+
+C2: 14 Histoire des mots · 15 Orthographe, ponctuation & typographie · 16 Français académique ·
+17 Langue juridique & administrative · 18 Français des affaires · 19 Rhétorique & langue de bois ·
+20 Lire la littérature · 21 Poésie & versification · 22 Traduire · 23 Langue, identité &
+institutions · 24 DALF C1 & C2 + plan de maîtrise (capstone).
+
+**Content:** 24 lessons, **96 exercise groups** (4 per lesson, 438 checkable blanks), 72 quiz
+questions, and a 🇫🇷/🇨🇦 `.dialect-compare` box in every lesson — at this tier comparing norms,
+institutions and register rather than vocabulary.
+
+## Shared-file changes made by this tier
+- `styles/main.css`: added `.tier-header.tier-c1/.tier-c2` and `.level-badge.level-c1/.level-c2`
+  (violet #7c3aed / teal #0e7490). That is the **only** shared-file edit.
+- `index.html` (root) and `intermediate/index.html`: a forward card to `/advanced/index.html`.
+
+## QA (headless Chromium, `python3 -m http.server 8931` from the french folder)
+All 29 advanced pages: **0 console errors**, objectives below the `<h1>` (one objectives box and one
+summary box each, journal present), **96/96 exercise groups score N/N** on reveal-then-check
+(438 blanks), 0 answer-key leaks, no raw `_____` visible, **0 broken links across 206 internal
+targets**, prev/next chain and `<h1>` numbering verified 1→24 (L1 back to `/intermediate/index.html`,
+L24 on to `cando.html`), CEFR band per lesson matches C1 = 1–13 / C2 = 14–24, light + dark + 390px
+all clean with **0px horizontal overflow on every page at 390px and 1280px**, and the three
+localStorage namespaces (`french-` / `french-int-` / `french-adv-`) verified isolated in fresh
+contexts. The beginner and intermediate tiers were re-checked after the shared-CSS edit: clean.
+
+## Feature parity with the other two tiers (audited 2026-09-23)
+Checked file-by-file and feature-by-feature against `/` and `/intermediate/`.
+- **Identical companion inventory** to the intermediate tier: `vocab-data.js`, `lesson-content.js`,
+  `index.html`, `cando.js/.html`, `cheatsheet.js/.html`, `readings.js/.html`, `glossary.html`,
+  `build_anki.py`, `docs/`, `.apkg`. Same 6 practice-tool cards on the index.
+- **Per lesson:** 4 exercise groups (beginner has 1–3), 3 quiz questions, a 🇫🇷/🇨🇦 box on
+  **24/24** (beginner is 26/28), footer nav, and — uniquely in this repo — the **attributed
+  copyright footer** the courseware standard asks for. `learn.js` supplies objectives, summary,
+  vocabulary review, SRS flashcards, auto-quiz, journal and mark-complete on every page.
+- **Two gaps were found and closed in this audit:**
+  1. `french_lesson_7.html` had no audio-eligible table, so `audio.js` attached no 🔊 anywhere in
+     its body — the only page in the repo in that state. Added a "Say Them Aloud" table with the
+     `French` / `Pronunciation` headers `audio.js` looks for.
+  2. The intermediate tier has inline `data-speak` spans on example sentences in prose (23 spans
+     over 7 lessons); the advanced tier had none. Added **39 spans over 17 lessons**, so this tier
+     now exceeds both siblings on inline audio.
+  Verified with a fake French voice injected into `speechSynthesis`: **564 🔊 buttons render across
+  the 24 lessons, 0 lessons without audio.**
+- **Deliberate non-parity, unchanged:** no vocabulary images (the vocab is grammatical metalanguage,
+  same reasoning as the intermediate tier), no `slugs` map (numbered pages), and no entry in
+  `add_footer_nav.py` (that generator governs the beginner tier only).
+- No tier has an "In This Lesson" TOC or Mermaid diagrams, so the advanced tier is consistent there.
+
+**Gotchas kept from this build:**
+- A `_____` inside a *readings* question stem renders literally (the readings engine, unlike
+  `learn.js`, does not convert blanks) — use `…` there.
+- The intermediate companion engines are the right base to splice from: copy the engine, replace the
+  `CANDO` / `SHEET` / `DIALOGUES` block, change the localStorage key and the Anki IDs.
