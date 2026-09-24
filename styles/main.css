@@ -62,6 +62,7 @@
     --accent-light:  var(--primary-light);
     --card-shadow:   var(--shadow-md);
     --table-header:  #eef2ff;
+    --hero-gradient: var(--primary-gradient);
 
 }
 
@@ -807,8 +808,8 @@ html.no-tts-voice .audio-notice { display: block; }
 .lesson-card { position: relative; }
 .level-badge {
     position: absolute;
-    top: .85rem;
-    right: .9rem;
+    top: .7rem;
+    right: 2.6rem;   /* leaves room for learn.js's completion tick at the corner */
     font-size: .72rem;
     font-weight: 700;
     letter-spacing: .04em;

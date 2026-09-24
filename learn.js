@@ -767,7 +767,7 @@
             '</div>';
 
         // Insert dashboard right after the intro, before the lesson grid.
-        var grid = container.querySelector('.lesson-grid');
+        var grid = container.querySelector('.lesson-grid, .tier-header, .course-grid');
         if (grid) container.insertBefore(dash, grid);
         else container.appendChild(dash);
 

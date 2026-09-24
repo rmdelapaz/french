@@ -262,7 +262,7 @@
         var saved;
         try { saved = localStorage.getItem('french-tts-voice'); } catch (e) { saved = null; }
         if (saved) { var m = voices.filter(function (v) { return v.voiceURI === saved; })[0]; if (m) return m; }
-        var order = [/es[-_]/i, /french/i, /español/i, /^es$/i, /castellano/i];
+        var order = [/^fr([-_]|$)/i, /french/i, /français/i];
         for (var i = 0; i < order.length; i++) {
             var v = voices.filter(function (vv) { return order[i].test(vv.lang) || order[i].test(vv.name); })[0];
             if (v) return v;
@@ -331,7 +331,7 @@
                 var ok = alts.indexOf(norm(input.value)) >= 0;
                 li.classList.toggle('rd-correct', ok);
                 li.classList.toggle('rd-wrong', !ok);
-                fb.textContent = ok ? '¡Correcto! (Correct!) 🎉' : 'Not quite — try again, or reveal the answer.';
+                fb.textContent = ok ? 'C’est ça ! (Correct!) 🎉' : 'Not quite — try again, or reveal the answer.';
                 return;
             }
 
